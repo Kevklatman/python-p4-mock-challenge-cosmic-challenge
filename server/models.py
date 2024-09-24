@@ -34,8 +34,8 @@ class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
-    field_of_study = db.Column(db.String)
+    name = db.Column(db.String, nullable = False)
+    field_of_study = db.Column(db.String, nullable = False)
 
     # Add relationship
     missions = db.relationship("Mission", back_populates="scientist")
@@ -43,16 +43,27 @@ class Scientist(db.Model, SerializerMixin):
     serialize_rules = ('-missions.scientist',)
     # Add validation
 
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name:
+            raise ValueError("Scientist name cannot be empty idiot")
+        return name
+    
+    @validates('field_of_study')
+    def validate_field(self, key, field_of_study):
+        if not field_of_study:
+            raise ValueError("Field of study cannot be empty stupid")
+
 
 class Mission(db.Model, SerializerMixin):
     __tablename__ = 'missions'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String)
+    name = db.Column(db.String, nullable=False)
 
     # Add relationships
-    scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'))
-    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'))
+    scientist_id = db.Column(db.Integer, db.ForeignKey('scientists.id'), nullable = False)
+    planet_id = db.Column(db.Integer, db.ForeignKey('planets.id'), nullable = False)
 
     planet = db.relationship("Planet", back_populates="missions")
     scientist = db.relationship("Scientist", back_populates="missions")
@@ -61,5 +72,15 @@ class Mission(db.Model, SerializerMixin):
     serialize_rules = ('-planet.missions', '-scientist.missions')
     # Add validation
 
+    @validates('name')
+    def validate_name(self, key, name):
+        if not name or not name.strip():
+            raise ValueError("Mission name cannot be empty")
+        return name.strip()
 
+    @validates('scientist_id', 'planet_id')
+    def validate_foreign_keys(self, key, value):
+        if value is None:
+            raise ValueError(f"{key.replace('_id', '').capitalize()} must be assigned to the mission")
+        return value
 # add any models you may need.
