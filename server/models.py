@@ -34,8 +34,8 @@ class Scientist(db.Model, SerializerMixin):
     __tablename__ = 'scientists'
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String, nullable = False)
-    field_of_study = db.Column(db.String, nullable = False)
+    name = db.Column(db.String, nullable=False)
+    field_of_study = db.Column(db.String, nullable=True)  # Change this to True
 
     # Add relationship
     missions = db.relationship("Mission", back_populates="scientist")
@@ -51,8 +51,9 @@ class Scientist(db.Model, SerializerMixin):
     
     @validates('field_of_study')
     def validate_field(self, key, field_of_study):
-        if not field_of_study:
+        if field_of_study is not None and not field_of_study.strip():
             raise ValueError("Field of study cannot be empty stupid")
+        return field_of_study
 
 
 class Mission(db.Model, SerializerMixin):

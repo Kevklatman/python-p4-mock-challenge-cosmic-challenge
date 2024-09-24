@@ -1,8 +1,8 @@
-"""initial migration
+"""initital model
 
-Revision ID: 03b678e533ad
+Revision ID: 0c7d0f06ec56
 Revises: 
-Create Date: 2024-09-23 18:40:07.568816
+Create Date: 2024-09-23 19:13:26.001990
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '03b678e533ad'
+revision = '0c7d0f06ec56'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -27,15 +27,15 @@ def upgrade():
     )
     op.create_table('scientists',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(), nullable=True),
-    sa.Column('field_of_study', sa.String(), nullable=True),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('field_of_study', sa.String(), nullable=False),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_scientists'))
     )
     op.create_table('missions',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('name', sa.String(), nullable=True),
-    sa.Column('scientist_id', sa.Integer(), nullable=True),
-    sa.Column('planet_id', sa.Integer(), nullable=True),
+    sa.Column('name', sa.String(), nullable=False),
+    sa.Column('scientist_id', sa.Integer(), nullable=False),
+    sa.Column('planet_id', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['planet_id'], ['planets.id'], name=op.f('fk_missions_planet_id_planets')),
     sa.ForeignKeyConstraint(['scientist_id'], ['scientists.id'], name=op.f('fk_missions_scientist_id_scientists')),
     sa.PrimaryKeyConstraint('id', name=op.f('pk_missions'))
