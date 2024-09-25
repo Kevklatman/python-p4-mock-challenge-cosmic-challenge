@@ -11,8 +11,11 @@ convention = {
     "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
     "pk": "pk_%(table_name)s"
 }
-
-metadata = MetaData(naming_convention=convention)
+metadata = MetaData(
+    naming_convention={
+        "fk": "fk_%(table_name)s_%(column_0_name)s_%(referred_table_name)s",
+    }
+)
 
 db = SQLAlchemy(metadata=metadata)
 
@@ -41,6 +44,7 @@ class Scientist(db.Model, SerializerMixin):
     missions = db.relationship("Mission", back_populates="scientist")
     # Add serialization rules
     serialize_rules = ('-missions.scientist',)
+    serialize_only = ('id', 'name', 'field_of_study')
     # Add validation
 
     @validates('name')
@@ -54,6 +58,9 @@ class Scientist(db.Model, SerializerMixin):
         if field_of_study is not None and not field_of_study.strip():
             raise ValueError("Field of study cannot be empty stupid")
         return field_of_study
+    
+def __repr__(self):
+    return f"<Scientist {self.name}, {self.field_of_study}>"
 
 
 class Mission(db.Model, SerializerMixin):

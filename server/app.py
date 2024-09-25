@@ -20,15 +20,19 @@ migrate = Migrate(app, db)
 
 db.init_app(app)
 
+api = Api(app)
+
 
 @app.route('/')
 def home():
     return ''
 
-class Restaurant(Resource):
+class Scientists(Resource):
     def get(self):
         scientists = Scientist.query.all()
         return [scientist.to_dict() for scientist in scientists]
+    
+api.add_resource(Scientists, '/scientists')
 
 
 
