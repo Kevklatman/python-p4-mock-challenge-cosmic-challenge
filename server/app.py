@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-from models import db, Scientist, Mission, Planet
+from flask import Flask, make_response, jsonify, request
 from flask_restful import Api, Resource
 from flask_migrate import Migrate
-from flask import Flask, make_response, jsonify, request
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
+from models import db, Scientist, Mission, Planet
 import os
 
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -31,12 +32,13 @@ class Scientists(Resource):
     def post(self):
         data = request.get_json()
         try:
-            new_scientist = Scientist(name=data['name'], field_of_study=data['field_of_study'])
+            new_scientist = Scientist(name=data.get('name'), field_of_study=data.get('field_of_study'))
             db.session.add(new_scientist)
             db.session.commit()
             return new_scientist.to_dict(), 201
-        except ValueError as e:
-            return {"errors": [str(e)]}, 400
+        except (ValueError, IntegrityError, SQLAlchemyError) as e:
+            db.session.rollback()
+            return {"errors": ["validation errors"]}, 400
 
 class ScientistsById(Resource):
     def get(self, id):
@@ -56,8 +58,9 @@ class ScientistsById(Resource):
                 setattr(scientist, attr, data[attr])
             db.session.commit()
             return scientist.to_dict(), 202
-        except ValueError as e:
-            return {"errors": [str(e)]}, 400
+        except (ValueError, IntegrityError, SQLAlchemyError) as e:
+            db.session.rollback()
+            return {"errors": ["validation errors"]}, 400
 
     def delete(self, id):
         scientist = Scientist.query.get(id)
@@ -68,21 +71,27 @@ class ScientistsById(Resource):
         db.session.commit()
         return "", 204
 
+class Missions(Resource):
+    def post(self):
+        data = request.get_json()
+        try:
+            new_mission = Mission(
+                name=data.get('name'),
+                scientist_id=data.get('scientist_id'),
+                planet_id=data.get('planet_id')
+            )
+            db.session.add(new_mission)
+            db.session.commit()
+            return new_mission.to_dict(rules=('-scientist.missions', '-planet.missions')), 201
+        except (ValueError, IntegrityError, SQLAlchemyError) as e:
+            db.session.rollback()
+            return {"errors": ["validation errors"]}, 400
+
 class Planets(Resource):
     def get(self):
         planets = Planet.query.all()
         return [{"id": p.id, "name": p.name, "distance_from_earth": p.distance_from_earth, "nearest_star": p.nearest_star} for p in planets]
 
-class Missions(Resource):
-    def post(self):
-        data = request.get_json()
-        try:
-            new_mission = Mission(name=data['name'], scientist_id=data['scientist_id'], planet_id=data['planet_id'])
-            db.session.add(new_mission)
-            db.session.commit()
-            return new_mission.to_dict(rules=('-scientist.missions', '-planet.missions')), 201
-        except ValueError as e:
-            return {"errors": [str(e)]}, 400
 
 api.add_resource(Scientists, '/scientists')
 api.add_resource(ScientistsById, '/scientists/<int:id>')
