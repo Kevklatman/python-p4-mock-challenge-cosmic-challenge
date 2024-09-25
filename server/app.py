@@ -25,6 +25,12 @@ db.init_app(app)
 def home():
     return ''
 
+class Restaurant(Resource):
+    def get(self):
+        scientists = Scientist.query.all()
+        return [scientist.to_dict() for scientist in scientists]
+
+
 
 if __name__ == '__main__':
     app.run(port=5555, debug=True)
